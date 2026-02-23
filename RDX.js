@@ -533,7 +533,30 @@ async function startBot() {
     logs.info('BOT', `Timezone: ${config.TIMEZONE || 'Asia/Karachi'}`);
     logs.info('BOT', `Prefix: ${config.PREFIX || '.'}`);
 
-    rdx_fca.login({ appState: appstate }, loginOptions, async (err, loginApi) => {
+    // ============= COOKIES SUPPORT ADDED HERE =============
+    // Cookies se login try karo
+    let finalAppState = appstate;
+    const cookiesPath = path.join(__dirname, 'Data/cookies.json');
+
+    if (fs.existsSync(cookiesPath)) {
+      try {
+        const cookies = fs.readJsonSync(cookiesPath);
+        // Appstate mein cookies ki values update karo
+        for (let item of finalAppState) {
+          if (cookies[item.key]) {
+            item.value = cookies[item.key];
+          }
+        }
+        logs.info('LOGIN', '✅ Cookies se login ho raha hai...');
+      } catch (e) {
+        logs.warn('LOGIN', '❌ Cookies file error, appstate use ho raha hai');
+      }
+    } else {
+      logs.info('LOGIN', '📁 cookies.json nahi mili, appstate use ho raha hai');
+    }
+    // ============= COOKIES SUPPORT ENDS HERE =============
+
+    rdx_fca.login({ appState: finalAppState }, loginOptions, async (err, loginApi) => {
       if (err) {
         logs.error('LOGIN', 'Failed to login:', err.message || err);
         isStarting = false;
